@@ -8,7 +8,7 @@ defmodule Graph do
     receive do
       {:bfs, graph, new_state} -> :ok
       {:dfs, graph, new_state} -> :ok
-      {:get_state, caller} -> :ok
+      {:get_state, caller} -> send(caller, {self, state}) #Estos mensajes solo los manda el main.
     end
   end
   
