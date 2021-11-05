@@ -20,13 +20,20 @@ defmodule Tree do
   end
 
   def broadcast(tree, n) do
-    #Aquí va su código.
-    :ok
+    cond do
+      Map.has_key?(tree, (2*n) + 1) and Map.has_key?(tree, (2*n) + 2) ->
+        "Tiene dos hijos"
+      Map.has_key?(tree, (2*n) + 1) ->
+        "Tiene hijo derecho"
+      Map.has_key?(tree, (2*n) + 2) ->
+        "Tiene hijo izquierdo"
+      true -> "No tiene hijos"
+    end
   end
 
   def convergecast(tree, n) do
     #Aquí va su código.
     :ok
   end
-  
+
 end
