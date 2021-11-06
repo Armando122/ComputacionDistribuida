@@ -22,7 +22,8 @@ defmodule Tree do
   def broadcast(tree, n) do
     cond do
       Map.has_key?(tree, (2*n) + 1) and Map.has_key?(tree, (2*n) + 2) ->
-        "Tiene dos hijos"
+        pidIzq = tree[(2*n) + 1]
+        send(pidIzq, {:broadcast, tree, ((2*n) + 1), self()})
       Map.has_key?(tree, (2*n) + 1) ->
         "Tiene hijo derecho"
       Map.has_key?(tree, (2*n) + 2) ->
