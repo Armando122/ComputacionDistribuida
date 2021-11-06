@@ -24,6 +24,8 @@ defmodule Tree do
       Map.has_key?(tree, (2*n) + 1) and Map.has_key?(tree, (2*n) + 2) ->
         pidIzq = tree[(2*n) + 1]
         send(pidIzq, {:broadcast, tree, ((2*n) + 1), self()})
+        pidDer = tree[(2*n) + 2]
+        send(pidDer, {:broadcast, tree, ((2*n) + 2), self()})
       Map.has_key?(tree, (2*n) + 1) ->
         "Tiene hijo derecho"
       Map.has_key?(tree, (2*n) + 2) ->
