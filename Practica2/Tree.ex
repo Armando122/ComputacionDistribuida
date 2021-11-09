@@ -1,13 +1,17 @@
 defmodule Tree do
 
+  # Función para crear el árbol
+  # n es el tamaño del árbol
   def new(n) do
     create_tree(Enum.map(1..n, fn _ -> spawn(fn -> loop() end) end), %{}, 0)
   end
 
   defp loop() do
     receive do
-      {:broadcast, tree, i, caller} -> :ok #Aquí va su código.
-      {:convergecast, tree, i, caller} -> :ok #Aquí va su código.
+      {:broadcast, tree, i, caller} -> :ok #aquí puede morir el diccionario de
+                                           # procesos o no
+      {:convergecast, tree, i, caller} -> :ok #aquí puede morir el diccionario de
+                                           # procesos o no
     end
   end
 
@@ -20,12 +24,14 @@ defmodule Tree do
   end
 
   def broadcast(tree, n) do
+    # n = tamaño del árbol
+
     cond do
       Map.has_key?(tree, (2*n) + 1) and Map.has_key?(tree, (2*n) + 2) ->
         pidIzq = tree[(2*n) + 1]
-        send(pidIzq, {:broadcast, tree, ((2*n) + 1), self()})
-        pidDer = tree[(2*n) + 2]
-        send(pidDer, {:broadcast, tree, ((2*n) + 2), self()})
+        send(pidIzq, {:broadcast, tree, ((2*n) + 1), tree[n]})
+        #pidDer = tree[(2*n) + 2]
+        #send(pidDer, {:broadcast, tree, ((2*n) + 2), self()})
       Map.has_key?(tree, (2*n) + 1) ->
         "Tiene hijo derecho"
       Map.has_key?(tree, (2*n) + 2) ->
@@ -35,6 +41,7 @@ defmodule Tree do
   end
 
   def convergecast(tree, n) do
+    # Donde n es el tamaño del árbol
     #Aquí va su código.
     :ok
   end

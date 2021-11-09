@@ -1,5 +1,8 @@
 defmodule Graph do
-  
+
+  #Infinito esta dado por -1
+  # Envías distancia mas 1
+  #Distancia inicial es 0
   def new(n) do
     create_graph(Enum.map(1..n, fn _ -> spawn(fn -> loop(-1) end) end), %{}, n)
   end
@@ -11,7 +14,7 @@ defmodule Graph do
       {:get_state, caller} -> send(caller, {self, state}) #Estos mensajes solo los manda el main.
     end
   end
-  
+
   defp create_graph([], graph, _) do
     graph
   end
@@ -48,7 +51,10 @@ defmodule Graph do
   def random_src(graph) do
     Enum.random(Map.keys(graph))
   end
-  
+
+  #Llevar una cuenta de los padres y saber si
+  # un vértice ya recibió mensaje, eso puede verse en
+  # loop.
   def bfs(graph, src) do
     :ok
   end
@@ -56,7 +62,7 @@ defmodule Graph do
   def bfs(graph) do
     bfs(graph, random_src(graph))
   end
-    
+
   def dfs(graph, src) do
     :ok
   end
@@ -64,5 +70,5 @@ defmodule Graph do
   def dfs(graph) do
     dfs(graph, random_src(graph))
   end
-  
+
 end
