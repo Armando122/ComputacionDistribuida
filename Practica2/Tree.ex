@@ -25,18 +25,40 @@ defmodule Tree do
 
   def broadcast(tree, n) do
     # n = tamaño del árbol
+    servir = principal()
+    broadcast_aux(tree, n, 0, servir)
+    send(tree[0],{:broadcast, tree, n, servir})
+  end
 
+  #Función recursiva auxiliar para propagar
+  #el mensaje broadcast.
+  defp broadcast_aux(tree, n, act,pid) do
+    m = act
+    izq = (2*m) + 1
+    der = (2*m) + 2
     cond do
-      Map.has_key?(tree, (2*n) + 1) and Map.has_key?(tree, (2*n) + 2) ->
-        pidIzq = tree[(2*n) + 1]
-        send(pidIzq, {:broadcast, tree, ((2*n) + 1), tree[n]})
-        #pidDer = tree[(2*n) + 2]
-        #send(pidDer, {:broadcast, tree, ((2*n) + 2), self()})
-      Map.has_key?(tree, (2*n) + 1) ->
-        "Tiene hijo derecho"
-      Map.has_key?(tree, (2*n) + 2) ->
-        "Tiene hijo izquierdo"
-      true -> "No tiene hijos"
+      Map.has_key?(tree, izq) and Map.has_key?(tree, der) ->
+        broadcast_aux(tree,n,izq,pid)
+        broadcast_aux(tree,n,der,pid)
+      Map.has_key?(tree, izq) ->
+        broadcast_aux(tree,n,izq,pid)
+      Map.has_key?(tree, der) ->
+        broadcast_aux(tree,n,der,pid)
+      true -> send(pid, {:status, m, tree[m]})
+    end
+  end
+
+  #Función para crear el nodo principal al que
+  #se le enviará la información de broadcast
+  # o convergecast.
+  defp principal() do
+    spawn(fn -> estado([]) end)
+  end
+
+  defp estado(lista) do
+    receive do
+      {:status, m, pid} -> estado(lista++[{m,pid}])
+      {:get, pid} -> send(pid,{lista})
     end
   end
 
