@@ -8,8 +8,7 @@ defmodule Tree do
 
   defp loop() do
     receive do
-      {:broadcast, tree, i, caller} -> :ok #aquí puede morir el diccionario de
-                                           # procesos o no
+      {:broadcast, tree, i, caller} -> broadcast_aux(tree,i,caller) 
       {:convergecast, tree, i, caller} -> :ok #aquí puede morir el diccionario de
                                            # procesos o no
     end
@@ -26,25 +25,27 @@ defmodule Tree do
   def broadcast(tree, n) do
     # n = tamaño del árbol
     servir = principal()
-    broadcast_aux(tree, n, 0, servir)
-    send(tree[0],{:broadcast, tree, n, servir})
+    send(tree[0],{:broadcast, tree,0,servir})
   end
 
-  #Función recursiva auxiliar para propagar
-  #el mensaje broadcast.
-  defp broadcast_aux(tree, n, act,pid) do
+  #Función auxiliar para propagar el mensaje broadcast.
+  defp broadcast_aux(tree, act, pid) do
     m = act
     izq = (2*m) + 1
     der = (2*m) + 2
     cond do
       Map.has_key?(tree, izq) and Map.has_key?(tree, der) ->
-        broadcast_aux(tree,n,izq,pid)
-        broadcast_aux(tree,n,der,pid)
+        pidIzq = tree[izq]
+        pidDer = tree[der]
+        send(pidIzq,{:broadcast, tree, izq, pid})
+        send(pidDer,{:broadcast, tree, der, pid})
       Map.has_key?(tree, izq) ->
-        broadcast_aux(tree,n,izq,pid)
+        pidIzq = tree[izq]
+        send(pidIzq,{:broadcast, tree, izq, pid})
       Map.has_key?(tree, der) ->
-        broadcast_aux(tree,n,der,pid)
-      true -> send(pid, {:status, m, tree[m]})
+        pidDer = tree[der]
+        send(pidDer,{:broadcast, tree, der, pid})
+      true -> send(pid, {m, :fin})
     end
   end
 
@@ -57,8 +58,9 @@ defmodule Tree do
 
   defp estado(lista) do
     receive do
-      {:status, m, pid} -> estado(lista++[{m,pid}])
-      {:get, pid} -> send(pid,{lista})
+      {m, :fin} -> estado(lista++[{m,:fin}])
+      {:get} -> IO.puts("#{inspect(lista)}")
+      estado(lista)
     end
   end
 
