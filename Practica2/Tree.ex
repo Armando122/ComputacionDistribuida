@@ -8,7 +8,7 @@ defmodule Tree do
 
   defp loop() do
     receive do
-      {:broadcast, tree, i, caller} -> broadcast_aux(tree,i,caller) 
+      {:broadcast, tree, i, caller} -> broadcast_aux(tree,i,caller)
       {:convergecast, tree, i, caller} -> :ok #aquí puede morir el diccionario de
                                            # procesos o no
     end
@@ -67,7 +67,15 @@ defmodule Tree do
   def convergecast(tree, n) do
     # Donde n es el tamaño del árbol
     #Aquí va su código.
-    :ok
+    #Paso 1, situarme en las hojas
+
+    hojas=div((n-1),2)
+    Enum.each((hojas..(n)), fn x ->send(tree[x], {:convergecast,tree,x, self()})end)
+    results=receive do
+      w->w
+    end
+    results
   end
+
 
 end
