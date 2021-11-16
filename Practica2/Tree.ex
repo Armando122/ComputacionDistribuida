@@ -72,25 +72,25 @@ defmodule Tree do
     hojas=(ceil n / 2)
     Enum.each((n-hojas)..(n-1),fn x -> send(tree[x], {:convergecast,tree,x, self()}) end)
     recibidos = receive do
-      w->w
+      w -> w
     end
     recibidos
   end
 
   def convergecast_per_node(tree, x, caller, registro)do
-    padre=padre(x)
-    hijos=verifica_hijos(tree,x)
+    padre = padre(x)
+    hijos = verifica_hijos(tree,x)
     registro++hijos
-    num_hijos=Enum.count(hijos)
+    num_hijos = Enum.count(hijos)
 
     cond do
-      x==0 ->#soy raíz
+      x == 0 -> #soy raíz
         send(caller, {:ok,tree[0]})
-      num_hijos==0 ->#Es la hoja
+      num_hijos == 0 -> #Es la hoja
         send(tree[padre], {:convergecast, tree, padre, caller})
-      Enum.count(tree)==Enum.count(registro) && tree[padre]!=nil->
+      Enum.count(tree) == Enum.count(registro) && tree[padre] != nil ->
         send(tree[padre], {:convergecast, tree, padre, caller})
-        tree[padre]==nil->
+        tree[padre] == nil ->
           true
     end
     registro
@@ -102,23 +102,23 @@ defmodule Tree do
 
 
   def verifica_hijos(tree,x) do
-    l=[]
-    if tree[derecho(x)]!=nil do
+    l= []
+    if tree[derecho(x)] != nil do
       l++[{derecho(x),tree[derecho(x)]}]
     end
 
-    if tree[izquierdo(x)]!=nil do
+    if tree[izquierdo(x)] != nil do
       l++[ {izquierdo(x),tree[izquierdo(x)]}]
     end
     l
   end
 
   def izquierdo n do
-    2*n+1
+    (2*n)+1
   end
 
   def derecho n do
-    2*n+2
+    (2*n)+2
   end
 
   def padre n do
