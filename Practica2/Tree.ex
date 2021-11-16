@@ -85,11 +85,13 @@ defmodule Tree do
 
     cond do
       x==0 ->#soy raíz
-        send(caller, {:ok,0})
-      num_hijos==0->#Es la hoja
+        send(caller, {:ok,tree[0]})
+      num_hijos==0 ->#Es la hoja
         send(tree[padre], {:convergecast, tree, padre, caller})
-      num_hijos==Enum.count(registro)->
+      Enum.count(tree)==Enum.count(registro) && tree[padre]!=nil->
         send(tree[padre], {:convergecast, tree, padre, caller})
+        tree[padre]==nil->
+          true
     end
     registro
   end
@@ -101,14 +103,14 @@ defmodule Tree do
 
   def verifica_hijos(tree,x) do
     l=[]
-    if Map.has_key?(tree,derecho(x))do
-      Enum.concat(l,derecho(x))
+    if tree[derecho(x)]!=nil do
+      l++[{derecho(x),tree[derecho(x)]}]
     end
-    if Map.has_key?(tree,izquierdo(x))do
-      Enum.concat(l,izquierdo(x))
+
+    if tree[izquierdo(x)]!=nil do
+      l++[ {izquierdo(x),tree[izquierdo(x)]}]
     end
     l
-
   end
 
   def izquierdo n do
