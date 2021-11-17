@@ -10,7 +10,7 @@ defmodule Tree do
     receive do
       {:broadcast, tree, i, caller} -> broadcast_aux(tree,i,caller)
       {:convergecast, tree, i, caller} -> convergecast_per_node(tree,i,caller, []) #aquí puede morir el diccionario de
-                                         # procesos o no
+                                                                                   #procesos o no
     end
   end
 
@@ -45,7 +45,8 @@ defmodule Tree do
       Map.has_key?(tree, der) ->
         pidDer = tree[der]
         send(pidDer,{:broadcast, tree, der, pid})
-      true -> send(pid, {m, :fin})
+      true -> send(pid, {tree[m], :ok})
+      send(pid,{:get})
     end
   end
 
@@ -58,7 +59,7 @@ defmodule Tree do
 
   defp estado(lista) do
     receive do
-      {m, :fin} -> estado(lista++[{m,:fin}])
+      {m, :ok} -> estado(lista++[{m,:ok}])
       {:get} -> IO.puts("#{inspect(lista)}")
       estado(lista)
     end
