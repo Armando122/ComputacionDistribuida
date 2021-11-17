@@ -9,8 +9,8 @@ defmodule Tree do
   defp loop() do
     receive do
       {:broadcast, tree, i, caller} -> broadcast_aux(tree,i,caller)
-      {:convergecast, tree, i, caller} -> :ok #aquí puede morir el diccionario de
-                                           # procesos o no
+      {:convergecast, tree, i, caller} -> convergecast_per_node(tree,i,caller, []) #aquí puede morir el diccionario de
+                                                                                   #procesos o no
     end
   end
 
@@ -68,7 +68,61 @@ defmodule Tree do
   def convergecast(tree, n) do
     # Donde n es el tamaño del árbol
     #Aquí va su código.
-    :ok
+    #Paso 1, situarme en las hojas
+
+    hojas=(ceil n / 2)
+    Enum.each((n-hojas)..(n-1),fn x -> send(tree[x], {:convergecast,tree,x, self()}) end)
+    recibidos = receive do
+      w -> w
+    end
+    IO.puts("#{inspect(recibidos)}")
+    recibidos
   end
 
+  def convergecast_per_node(tree, x, caller, registro)do
+    padre = padre(x)
+    hijos = verifica_hijos(tree,x)
+    registro++hijos
+    num_hijos = Enum.count(hijos)
+
+    cond do
+      x == 0 -> #soy raíz
+        send(caller, {:ok,tree[0]})
+      num_hijos == 0 -> #Es la hoja
+        send(tree[padre], {:convergecast, tree, padre, caller})
+      Enum.count(tree) == Enum.count(registro) && tree[padre] != nil ->
+        send(tree[padre], {:convergecast, tree, padre, caller})
+        tree[padre] == nil ->
+          true
+    end
+    registro
+  end
+
+  defp reinicia_nodos(tree)do
+    Enum.each(Map.values(tree), fn proceso-> send(proceso, :reset)end)
+  end
+
+  defp verifica_hijos(tree,x) do
+    l= []
+    if tree[derecho(x)] != nil do
+      l++[{derecho(x),tree[derecho(x)]}]
+    end
+
+    if tree[izquierdo(x)] != nil do
+      l++[ {izquierdo(x),tree[izquierdo(x)]}]
+    end
+    l
+  end
+
+  def izquierdo n do
+    (2*n)+1
+  end
+
+  def derecho n do
+    (2*n)+2
+  end
+
+  def padre n do
+    floor((n-1)/2)
+  end
 end

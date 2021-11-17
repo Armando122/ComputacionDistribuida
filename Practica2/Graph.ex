@@ -56,6 +56,14 @@ defmodule Graph do
   # un vértice ya recibió mensaje, eso puede verse en
   # loop.
   def bfs(graph, src) do
+    # padre = nil
+    # hijos = nil
+    # otros = nil
+
+    # if padre == nil do
+    #   Enum.each(Map.get(src), fn x -> send(x, {:bfs, graph, }) end)
+    #   padre = src
+    # end
     :ok
   end
 
