@@ -75,6 +75,7 @@ defmodule Tree do
     recibidos = receive do
       w -> w
     end
+    IO.puts("#{inspect(recibidos)}")
     recibidos
   end
 
@@ -101,8 +102,7 @@ defmodule Tree do
     Enum.each(Map.values(tree), fn proceso-> send(proceso, :reset)end)
   end
 
-
-  def verifica_hijos(tree,x) do
+  defp verifica_hijos(tree,x) do
     l= []
     if tree[derecho(x)] != nil do
       l++[{derecho(x),tree[derecho(x)]}]
@@ -125,6 +125,4 @@ defmodule Tree do
   def padre n do
     floor((n-1)/2)
   end
-
-
 end
