@@ -25,7 +25,7 @@ defmodule Tree do
   def broadcast(tree, n) do
     # n = tamaño del árbol
     servir = principal()
-    send(tree[0],{:broadcast, tree,0,servir})
+    send(tree[0],{:broadcast, tree, 0, servir})
   end
 
   #Función auxiliar para propagar el mensaje broadcast.
@@ -75,7 +75,8 @@ defmodule Tree do
     recibidos = receive do
       w -> w
     end
-    IO.puts("#{inspect(recibidos)}")
+    outgoing = Tuple.delete_at(Tuple.append(recibidos, elem(recibidos, 0)), 0)
+    IO.puts("#{inspect(outgoing)}")
     recibidos
   end
 
