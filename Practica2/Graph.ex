@@ -1,17 +1,24 @@
 defmodule Graph do
 
-  #Infinito esta dado por -1
-  # Envías distancia mas 1
-  #Distancia inicial es 0
   def new(n) do
-    create_graph(Enum.map(1..n, fn _ -> spawn(fn -> loop(-1) end) end), %{}, n)
+      create_graph(Enum.map(1..n, fn _ -> spawn(fn -> loop(-1) end) end), %{}, n)
   end
 
   defp loop(state) do
     receive do
-      {:bfs, graph, new_state} -> :ok
+      {:bfs, graph, new_state} -> state = if new_state < state || state == -1 do  new_state else state end
+                                  list_vec = Map.get(graph, self())
+                                  Enum.map(list_vec, fn x -> send(x, {:bfs, graph, state + 1})end)
+                                  loop(state)
       {:dfs, graph, new_state} -> :ok
-      {:get_state, caller} -> send(caller, {self, state}) #Estos mensajes solo los manda el main.
+      {:get_state, caller} -> #Estos mensajes solo los manda el main.
+        if state == -1 do
+          Process.sleep(5000)
+          send(self, {:get_state, caller})
+          loop(state)
+        else
+          send(caller, {self, state})
+        end
     end
   end
 
@@ -39,12 +46,12 @@ defmodule Graph do
       u == nil or v == nil -> graph
       u == v -> graph
       true ->
-	u_neighs = Map.get(graph, u)
-	new_u_neighs = MapSet.put(u_neighs, v)
-	graph = Map.put(graph, u, new_u_neighs)
-	v_neighs = Map.get(graph, v)
-	new_v_neighs = MapSet.put(v_neighs, u)
-	Map.put(graph, v, new_v_neighs)
+          u_neighs = Map.get(graph, u)
+          new_u_neighs = MapSet.put(u_neighs, v)
+          graph = Map.put(graph, u, new_u_neighs)
+          v_neighs = Map.get(graph, v)
+          new_v_neighs = MapSet.put(v_neighs, u)
+          Map.put(graph, v, new_v_neighs)
     end
   end
 
@@ -52,20 +59,26 @@ defmodule Graph do
     Enum.random(Map.keys(graph))
   end
 
-  #Llevar una cuenta de los padres y saber si
-  # un vértice ya recibió mensaje, eso puede verse en
-  # loop.
   def bfs(graph, src) do
-    # padre = nil
-    # hijos = nil
-    # otros = nil
+    send(src, {:bfs, graph, 0})
+    nodos = Map.keys(graph)
+    tamaño = map_size(graph)
+    aux(0, tamaño,nodos)
+    Enum.map(Map.keys(graph), fn x -> send(x,{:get_state,self})
+    receive do
+      {pid, state} -> {pid, state}
+    end
+   end)
 
-    # if padre == nil do
-    #   Enum.each(Map.get(src), fn x -> send(x, {:bfs, graph, }) end)
-    #   padre = src
-    # end
-    :ok
   end
+
+  def aux(x,long,nodos) do
+    if x < long do
+      send(Enum.at(nodos,x), {:get_state, self})
+      aux(x+1,long,nodos)
+    end
+  end
+
 
   def bfs(graph) do
     bfs(graph, random_src(graph))
