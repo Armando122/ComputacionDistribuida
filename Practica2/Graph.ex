@@ -6,24 +6,25 @@ defmodule Graph do
 
   defp loop(state) do
     receive do
-      {:bfs, graph, new_state} -> state = if new_state < state || state == -1 do  new_state else state end
-                                  list_vec = Map.get(graph, self())
-                                  Enum.map(list_vec, fn x -> send(x, {:bfs, graph, state + 1})end)
-                                  loop(state)
-
-      {:dfs, graph, new_state} -> distance = if state == -1 do state+1 end
-        list_vec = Map.get(graph, self())
-        Enum.map(list_vec, fn x -> send(x, {:bfs, graph, distance})end)
-        loop(distance)
-
-        {:get_state, caller} -> #Estos mensajes solo los manda el main.
-        if state == -1 do
-                      Process.sleep(5000)
-                      send(self, {:get_state, caller})
-                      loop(state)
-                     else
-                       send(caller, {self, state})
+      {:bfs, graph, new_state} ->
+        cond do
+          new_state < state || state == -1 ->
+            Enum.each(Map.get(graph, self()), fn proceso -> send(proceso, {:bfs, graph, new_state+1}) end)
+            loop(new_state)
+          true ->
+            loop(state)
         end
+
+      {:dfs, graph, new_state} ->
+        cond do
+          true ->
+            sinExplorar = Map.get(graph, self())
+            proceso = Enum.random(sinExplorar)
+            graph = Map.put(graph, self(), Map.delete(sinExplorar, proceso))
+            loop(state)
+        end
+
+      {:get_state, caller} -> send(caller, {self, state}) #Estos mensajes solo los manda el main.
     end
   end
 
@@ -63,24 +64,19 @@ defmodule Graph do
   def random_src(graph) do
     Enum.random(Map.keys(graph))
   end
-
-  def bfs(graph, src) do
-    send(src, {:bfs, graph, 0})
-    nodos = Map.keys(graph)
-    tamaño = map_size(graph)
-    aux(0, tamaño,nodos)
-    Enum.map(Map.keys(graph), fn x -> send(x,{:get_state,self})
-      receive do
-        {pid, state} -> {pid, state}
-      end
-    end)
+  defp unified(graph, src, mode) do
+    send(src, {mode, graph, 0})
+    Process.sleep(5000)
+    Enum.each(Map.keys(graph), fn proceso -> send(proceso, {:get_state, self()}) end)
+    n = length(Map.keys(graph))
+    Enum.map(1..n, fn _ -> receive do x -> x end end)
   end
 
-  def aux(x,long,nodos) do
-    if x < long do
-      send(Enum.at(nodos,x), {:get_state, self})
-      aux(x+1,long,nodos)
-    end
+  #Llevar una cuenta de los padres y saber si
+  # un vértice ya recibió mensaje, eso puede verse en
+  # loop.
+  def bfs(graph, src) do
+    unified(graph, src, :bfs)
   end
 
   def bfs(graph) do
@@ -88,15 +84,7 @@ defmodule Graph do
   end
 
   def dfs(graph, src) do
-    send(src, {:dfs, graph, 0})
-    nodos = Map.keys(graph)
-    tamaño = map_size(graph)
-    aux(0, tamaño,nodos)
-    Enum.map(Map.keys(graph), fn x -> send(x,{:get_state,self})
-      receive do
-        {pid, state} -> {pid, state}
-      end
-    end)
+    unified(graph, src, :dfs)
   end
 
   def dfs(graph) do
