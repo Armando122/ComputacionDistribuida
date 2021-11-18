@@ -9,8 +9,24 @@ defmodule Graph do
 
   defp loop(state) do
     receive do
-      {:bfs, graph, new_state} -> :ok
-      {:dfs, graph, new_state} -> :ok
+      {:bfs, graph, new_state} ->
+        cond do
+          new_state < state || state == -1 ->
+            Enum.each(Map.get(graph, self()), fn proceso -> send(proceso, {:bfs, graph, new_state+1}) end)
+            loop(new_state)
+          true ->
+            loop(state)
+        end
+
+      {:dfs, graph, new_state} ->
+        cond do
+          true ->
+            sinExplorar = Map.get(graph, self())
+            proceso = Enum.random(sinExplorar)
+            graph = Map.put(graph, self(), Map.delete(sinExplorar, proceso))
+            loop(state)
+        end
+
       {:get_state, caller} -> send(caller, {self, state}) #Estos mensajes solo los manda el main.
     end
   end
@@ -52,19 +68,19 @@ defmodule Graph do
     Enum.random(Map.keys(graph))
   end
 
+  defp unified(graph, src, mode) do
+    send(src, {mode, graph, 0})
+    Process.sleep(5000)
+    Enum.each(Map.keys(graph), fn proceso -> send(proceso, {:get_state, self()}) end)
+    n = length(Map.keys(graph))
+    Enum.map(1..n, fn _ -> receive do x -> x end end)
+  end
+
   #Llevar una cuenta de los padres y saber si
   # un vértice ya recibió mensaje, eso puede verse en
   # loop.
   def bfs(graph, src) do
-    # padre = nil
-    # hijos = nil
-    # otros = nil
-
-    # if padre == nil do
-    #   Enum.each(Map.get(src), fn x -> send(x, {:bfs, graph, }) end)
-    #   padre = src
-    # end
-    :ok
+    unified(graph, src, :bfs)
   end
 
   def bfs(graph) do
@@ -72,7 +88,7 @@ defmodule Graph do
   end
 
   def dfs(graph, src) do
-    :ok
+    unified(graph, src, :dfs)
   end
 
   def dfs(graph) do
