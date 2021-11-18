@@ -65,11 +65,10 @@ defmodule Graph do
     tamaño = map_size(graph)
     aux(0, tamaño,nodos)
     Enum.map(Map.keys(graph), fn x -> send(x,{:get_state,self})
-    receive do
-      {pid, state} -> {pid, state}
-    end
-   end)
-
+      receive do
+        {pid, state} -> {pid, state}
+      end
+    end)
   end
 
   def aux(x,long,nodos) do
@@ -79,17 +78,23 @@ defmodule Graph do
     end
   end
 
-
   def bfs(graph) do
     bfs(graph, random_src(graph))
   end
 
   def dfs(graph, src) do
-    :ok
+    send(src, {:dfs, graph, 0})
+    nodos = Map.keys(graph)
+    tamaño = map_size(graph)
+    aux(0, tamaño,nodos)
+    Enum.map(Map.keys(graph), fn x -> send(x,{:get_state,self})
+      receive do
+        {pid, state} -> {pid, state}
+      end
+    end)
   end
 
   def dfs(graph) do
     dfs(graph, random_src(graph))
   end
-
 end
