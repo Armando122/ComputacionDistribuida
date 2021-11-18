@@ -10,14 +10,19 @@ defmodule Graph do
                                   list_vec = Map.get(graph, self())
                                   Enum.map(list_vec, fn x -> send(x, {:bfs, graph, state + 1})end)
                                   loop(state)
-      {:dfs, graph, new_state} -> :ok
-      {:get_state, caller} -> #Estos mensajes solo los manda el main.
+
+      {:dfs, graph, new_state} -> distance = if state == -1 do state+1 end
+        list_vec = Map.get(graph, self())
+        Enum.map(list_vec, fn x -> send(x, {:bfs, graph, distance})end)
+        loop(distance)
+
+        {:get_state, caller} -> #Estos mensajes solo los manda el main.
         if state == -1 do
-          Process.sleep(5000)
-          send(self, {:get_state, caller})
-          loop(state)
-        else
-          send(caller, {self, state})
+                      Process.sleep(5000)
+                      send(self, {:get_state, caller})
+                      loop(state)
+                     else
+                       send(caller, {self, state})
         end
     end
   end
