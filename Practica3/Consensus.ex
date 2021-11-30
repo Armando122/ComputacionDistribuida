@@ -10,6 +10,7 @@ defmodule Consensus do
     Enum.map(1..n, fn _ ->
       spawn(fn -> loop(:start, 0, :rand.uniform(10)), end)
     end)
+    #Agregar código es valido
   end
 
   defp loop(state, value, miss_prob) do
@@ -18,8 +19,9 @@ defmodule Consensus do
     receive do
       {:get_value, caller} ->
 	send(caller, value)
+	#Aqui se pueden definir mas mensajes
     after
-      1000 -> :ok
+      1000 -> :ok #Analizar por qué esto esta aqui
     end
     case value do
       :start ->
