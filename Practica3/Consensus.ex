@@ -24,7 +24,7 @@ defmodule Consensus do
     after
       1000 -> :ok #Analizar por qué esto esta aqui
     end
-    case value do
+    case state do
       :start ->
 	chosen = :rand.uniform(10000)
 	if(rem(chosen, miss_prob) == 0) do
