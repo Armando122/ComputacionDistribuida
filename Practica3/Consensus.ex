@@ -8,7 +8,7 @@ defmodule Consensus do
     #todos los hilos tengan el mismo número, el cual va a ser enviado vía un
     #mensaje al hilo principal.
     Enum.map(1..n, fn _ ->
-      spawn(fn -> loop(:start, 0, :rand.uniform(10)), end)
+      spawn(fn -> loop(:start, 0, :rand.uniform(10)) end)
     end)
     #Agregar código es valido
   end
@@ -16,6 +16,7 @@ defmodule Consensus do
   defp loop(state, value, miss_prob) do
     if(state == :fail) do
       loop(state, value, miss_prob)
+    end
     receive do
       {:get_value, caller} ->
 	send(caller, value)
@@ -42,5 +43,5 @@ defmodule Consensus do
     #por todos los procesos.
     :ok
   end
-  
+
 end
