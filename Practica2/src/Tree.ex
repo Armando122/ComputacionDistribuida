@@ -25,7 +25,7 @@ defmodule Tree do
   def broadcast(tree, n) do
     # n = tamaño del árbol
     servir = principal()
-    send(tree[0],{:broadcast, tree,0,servir})
+    send(tree[0],{:broadcast, tree, 0, servir})
   end
 
   #Función auxiliar para propagar el mensaje broadcast.
@@ -75,11 +75,10 @@ defmodule Tree do
     recibidos = receive do
       w -> w
     end
-    IO.puts("#{inspect(recibidos)}")
     recibidos
   end
 
-  def convergecast_per_node(tree, x, caller, registro)do
+  defp convergecast_per_node(tree, x, caller, registro) do
     padre = padre(x)
     hijos = verifica_hijos(tree,x)
     registro++hijos
@@ -87,7 +86,7 @@ defmodule Tree do
 
     cond do
       x == 0 -> #soy raíz
-        send(caller, {:ok,tree[0]})
+        send(caller, {tree[0], :ok})
       num_hijos == 0 -> #Es la hoja
         send(tree[padre], {:convergecast, tree, padre, caller})
       Enum.count(tree) == Enum.count(registro) && tree[padre] != nil ->
@@ -114,15 +113,15 @@ defmodule Tree do
     l
   end
 
-  def izquierdo n do
+  defp izquierdo n do
     (2*n)+1
   end
 
-  def derecho n do
+  defp derecho n do
     (2*n)+2
   end
 
-  def padre n do
+  defp padre n do
     floor((n-1)/2)
   end
 end

@@ -1,10 +1,6 @@
-
-# Práctica 2 - Árboles y Gráficas distribuidas
-
-## Integrantes del equipo
-
-- Armando Ramírez González
+# Integrantes del equipo
 - Ian Israel García Vázquez
+- Armando Ramírez González
 - Ricardo Montiel Manriquez
 - Christopher Alejandro Escamilla Soto
 - Jonás García Chavelas
