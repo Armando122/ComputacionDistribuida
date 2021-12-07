@@ -32,15 +32,21 @@ defmodule Consensus do
   end
 
   defp loop(state, value, miss_prob) do
+    #inicia código inamovible.
     if(state == :fail) do
       loop(state, value, miss_prob)
     end
+
+    # Termina código inamovible.
     receive do
       {:get_value, caller} ->
-        send(caller, value)
-	#Aqui se pueden definir mas mensajes
+	send(caller, value) #No modificar.
+      #Aquí se pueden definir más mensajes.
     after
-      1000 -> :ok #Analizar por qué esto esta aqui
+      1000 -> :ok #Aquí analizar porqué está esto aquí.
+
+
+
     end
     case state do
       :start ->
@@ -59,7 +65,7 @@ defmodule Consensus do
   end
 
   def consensus(processes) do
-    Process.sleep(5000)
+    Process.sleep(10000)
     #Aquí va su código, deben de regresar el valor unánime decidido
     #por todos los procesos.
     :ok
