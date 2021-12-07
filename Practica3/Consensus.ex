@@ -30,8 +30,21 @@ defmodule Consensus do
 	  loop(:active, chosen, miss_prob)
 	end
       :fail -> loop(:fail, value, miss_prob)
-      :active -> :ok #Aquí va su código.
+      :active ->
+        receive do
+          x -> loop()
+        end
     end
+  end
+
+  defp loop(list, value) do
+    list++[value]
+    Enum.sort(list)
+    decision=list[0]
+  end
+
+  defp receiver(value) do
+
   end
 
   def consensus(processes) do
@@ -40,5 +53,5 @@ defmodule Consensus do
     #por todos los procesos.
     :ok
   end
-  
+
 end
