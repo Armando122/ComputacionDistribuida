@@ -45,8 +45,6 @@ defmodule Consensus do
     after
       1000 -> :ok #Aquí analizar porqué está esto aquí.
 
-
-
     end
     case state do
       :start ->
@@ -60,7 +58,16 @@ defmodule Consensus do
 
       :fail -> loop(:fail, value, miss_prob)
 
-      :active -> :ok #Aquí va su código.
+      #Envío de su propuesta a los demás procesos
+      :active ->
+        Process.sleep(5000)
+        send(self,{:add,value})
+        loop(:wait,value,miss_prob)
+
+      #Mensaje para almacenar las propuestas recibidas.
+      #Y tomar una decisión después de segundos.
+      :wait -> :ok
+
     end
   end
 
