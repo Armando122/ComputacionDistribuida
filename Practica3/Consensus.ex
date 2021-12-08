@@ -13,8 +13,8 @@ defmodule Consensus do
 
     #Función para indexar los hilos
     indexa(Enum.map(1..n, fn _ ->
-      spawn(fn -> loop(:start, 0, :rand.uniform(10)) end)
-    end), %{}, 0)
+          spawn(fn -> loop(:start, 0, :rand.uniform(10)) end)
+        end), %{}, 0)
 
     #Agregar código es valido
   end
@@ -28,7 +28,7 @@ defmodule Consensus do
   # Función auxiliar indexa para indexar los procesos
   # en un diccionario. (Sobrecarga de método)
   defp indexa([pid | l], procesos, pos) do
-    indexa(l,Map.put(procesos, pos, pid), (pos+1))
+    indexa(l, Map.put(procesos, pos, pid), (pos+1))
   end
 
   defp loop(state, value, miss_prob) do
@@ -40,8 +40,8 @@ defmodule Consensus do
     # Termina código inamovible.
     receive do
       {:get_value, caller} ->
-	send(caller, value) #No modificar.
-      #Aquí se pueden definir más mensajes.
+	      send(caller, value) #No modificar.
+        #Aquí se pueden definir más mensajes.
     after
       1000 -> :ok #Aquí analizar porqué está esto aquí.
 
