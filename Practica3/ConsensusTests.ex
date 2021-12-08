@@ -6,11 +6,12 @@ defmodule ConsensusTests do
     processes = Consensus.create_consensus(10)
     Consensus.consensus(processes) #Esto ya lo va a dormir un rato.
     values = Enum.map(processes, fn pid ->
-      send(pid, {:get_value, caller})
+      send(pid, {:get_value, self()})
       receive do
-	x -> x
+	      x -> x
       after
-	1000 -> :ok
+	      1000 -> :ok
+        end
       end)
     values = Enum.filter(values, fn x -> x != :ok end)
     first = Enum.at(values, 0)
@@ -18,5 +19,5 @@ defmodule ConsensusTests do
       assert x == first
     end)
   end
-  
+
 end
