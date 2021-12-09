@@ -66,11 +66,12 @@ defmodule Consensus do
 
       #Mensaje para almacenar las propuestas recibidas.
       #Y tomar una decisión después de segundos.
+        x=[]
       receive do
         :wait ->
           :ok
           receive do
-            x=[]
+
             :add -> value=loop(x, value)
           end
       end
@@ -89,6 +90,11 @@ defmodule Consensus do
 
   def consensus(processes) do
     Process.sleep(10000)
+    send(self,:get_value)
+    receive do
+      v -> IO.puts(v)
+
+    end
     #Aquí va su código, deben de regresar el valor unánime decidido
     #por todos los procesos.
     :ok
