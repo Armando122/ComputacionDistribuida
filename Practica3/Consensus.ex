@@ -66,7 +66,16 @@ defmodule Consensus do
 
       #Mensaje para almacenar las propuestas recibidas.
       #Y tomar una decisión después de segundos.
-      :wait -> :ok
+      receive do
+        :wait ->
+          :ok
+          receive do
+            :add -> value=loop([], value)
+          end
+        :add -> value=loop([], value)
+      end
+
+
 
     end
   end
@@ -77,9 +86,6 @@ defmodule Consensus do
     decision=list[0]
   end
 
-  defp receiver(decision) do
-    loop()
-  end
 
   def consensus(processes) do
     Process.sleep(10000)
