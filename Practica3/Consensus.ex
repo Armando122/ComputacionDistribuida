@@ -11,24 +11,7 @@ defmodule Consensus do
       spawn(fn -> loop(:start, 0, :rand.uniform(10)) end)
     end)
 
-    #Función para indexar los hilos
-    indexa(Enum.map(1..n, fn _ ->
-      spawn(fn -> loop(:start, 0, :rand.uniform(10)) end)
-    end), %{}, 0)
-
     #Agregar código es valido
-  end
-
-  # Función auxiliar indexa para indexar los procesos
-  # en un diccionario.
-  defp indexa([], procesos, _) do
-    procesos
-  end
-
-  # Función auxiliar indexa para indexar los procesos
-  # en un diccionario. (Sobrecarga de método)
-  defp indexa([pid | l], procesos, pos) do
-    indexa(l,Map.put(procesos, pos, pid), (pos+1))
   end
 
   defp loop(state, value, miss_prob) do
