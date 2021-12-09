@@ -48,8 +48,8 @@ defmodule Consensus do
     decision=list[0]
   end
 
-  defp receiver(value) do
-
+  defp receiver(decision) do
+    loop()
   end
 
   def consensus(processes) do
