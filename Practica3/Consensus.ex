@@ -70,9 +70,9 @@ defmodule Consensus do
         :wait ->
           :ok
           receive do
-            :add -> value=loop([], value)
+            x=[]
+            :add -> value=loop(x, value)
           end
-        :add -> value=loop([], value)
       end
 
 
