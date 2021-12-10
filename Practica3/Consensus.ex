@@ -11,9 +11,10 @@ defmodule Consensus do
       spawn(fn -> loop(:start, 0, :rand.uniform(10)) end)
     end)
 
-    #Agregar código es valido
   end
 
+  # Función loop que recibe como último parametro
+  # una lista correspondiente a los vecinos del proceso.
   defp loop(state, value, miss_prob) do
     #inicia código inamovible.
     if(state == :fail) do
@@ -24,7 +25,8 @@ defmodule Consensus do
     receive do
       {:get_value, caller} ->
 	send(caller, value) #No modificar.
-      #Aquí se pueden definir más mensajes.
+
+      {}
     after
       1000 -> :ok #Aquí analizar porqué está esto aquí.
 
@@ -43,9 +45,10 @@ defmodule Consensus do
 
       #Envío de su propuesta a los demás procesos
       :active ->
-        Process.sleep(5000)
-        send(self,{:add,value})
-        loop(:wait,value,miss_prob)
+        for pid <- vecinos do
+          send(pid,{:add,value})
+          loop(:wait,value,miss_prob)
+        end
 
       #Mensaje para almacenar las propuestas recibidas.
       #Y tomar una decisión después de segundos.
@@ -55,10 +58,23 @@ defmodule Consensus do
   end
 
   def consensus(processes) do
+    # Establecemos la lista de vecinos de cada proceso.
+    for v <- processes do
+      send(v, {:add, List.delete(processes,v)})
+    end
+
     Process.sleep(10000)
-    #Aquí va su código, deben de regresar el valor unánime decidido
-    #por todos los procesos.
-    :ok
+
+    # Obtenemos el valor que eligió cada proceso.
+    for pid <- processes do
+      send(pid, {:get_value, self()})
+      receive do
+        value -> IO.puts(inspect(p), " eligió: ", inspect(value))
+      after
+        100 -> IO.puts(inspect(p), " fallido" )
+      end
+    end
+
   end
 
 end
