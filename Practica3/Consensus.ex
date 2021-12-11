@@ -10,13 +10,6 @@ defmodule Consensus do
     Enum.map(1..n, fn _ ->
       spawn(fn -> loop(:start, 0, :rand.uniform(10), []) end)
     end)
-
-    #Función para indexar los hilos
-    indexa(Enum.map(1..n, fn _ ->
-          spawn(fn -> loop(:start, 0, :rand.uniform(10), []) end)
-        end), %{}, 0)
-
-    #Agregar código es valido
   end
 
   #Función loop que recibe el estado del proceso, el valor
