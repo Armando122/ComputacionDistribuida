@@ -1,6 +1,7 @@
 require Consensus
 
 defmodule ConsensusTests do
+  use ExUnit.Case
 
   test "Consenso" do
     processes = Consensus.create_consensus(10)
