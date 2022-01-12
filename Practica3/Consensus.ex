@@ -8,96 +8,83 @@ defmodule Consensus do
     #todos los hilos tengan el mismo número, el cual va a ser enviado vía un
     #mensaje al hilo principal.
     Enum.map(1..n, fn _ ->
-      spawn(fn -> loop(:start, 0, :rand.uniform(10)) end)
+      spawn(fn -> loop(:start, 0, :rand.uniform(10),[]) end)
     end)
 
-    #Función para indexar los hilos
-    indexa(Enum.map(1..n, fn _ ->
-      spawn(fn -> loop(:start, 0, :rand.uniform(10)) end)
-    end), %{}, 0)
-
-    #Agregar código es valido
   end
 
-  # Función auxiliar indexa para indexar los procesos
-  # en un diccionario.
-  defp indexa([], procesos, _) do
-    procesos
-  end
-
-  # Función auxiliar indexa para indexar los procesos
-  # en un diccionario. (Sobrecarga de método)
-  defp indexa([pid | l], procesos, pos) do
-    indexa(l,Map.put(procesos, pos, pid), (pos+1))
-  end
-
-  defp loop(state, value, miss_prob) do
+  #Función loop que recibe el estado del proceso, el valor
+  # elegido, la probabilidad de fallar y la lista de vecinos.
+  defp loop(state, value, miss_prob,vecinos) do
     #inicia código inamovible.
     if(state == :fail) do
-      loop(state, value, miss_prob)
+      loop(state, value, miss_prob,vecinos)
     end
 
     # Termina código inamovible.
     receive do
       {:get_value, caller} ->
-	send(caller, value) #No modificar.
-      #Aquí se pueden definir más mensajes.
+        send(caller, value) #No modificar.
+
+      {:vecinos,list} -> loop(state,value,miss_prob,list)
+
+      {:add,val} ->
+        if val<value do
+          loop(state,val,miss_prob,vecinos)
+        else
+          loop(state,value,miss_prob,vecinos)
+        end
+
     after
       1000 -> :ok #Aquí analizar porqué está esto aquí.
 
     end
+
     case state do
       :start ->
         chosen = :rand.uniform(10000)
 
         if(rem(chosen, miss_prob) == 0) do
-          loop(:fail, chosen, miss_prob)
+          loop(:fail, chosen, miss_prob,vecinos)
         else
-          loop(:active, chosen, miss_prob)
+          Process.sleep(5000)
+          loop(:active, chosen, miss_prob,vecinos)
         end
 
-      :fail -> loop(:fail, value, miss_prob)
+      :fail -> loop(:fail, value, miss_prob,vecinos)
 
       #Envío de su propuesta a los demás procesos
       :active ->
-        Process.sleep(5000)
-        send(self,{:add,value})
-        loop(:wait,value,miss_prob)
+        for pid <- vecinos do
+          send(pid,{:add,value})
+        end
+        loop(:wait,value,miss_prob,vecinos)
 
-      #Mensaje para almacenar las propuestas recibidas.
-      #Y tomar una decisión después de segundos.
-        x=[]
-      receive do
-        :wait ->
-          :ok
-          receive do
-
-            :add -> value=loop(x, value)
-          end
-      end
-
-
+      # Mensaje para que el proceso se siga ejecutando
+      # mientras recibe las propuestas.
+      :wait -> loop(state,value,miss_prob,vecinos)
 
     end
   end
-
-  defp loop(list, value) do
-    list++[value]
-    Enum.sort(list)
-    decision=list[0]
-  end
-
 
   def consensus(processes) do
-    Process.sleep(10000)
-    send(self,:get_value)
-    receive do
-      v -> IO.puts(v)
-
+    # Establecemos la lista de vecinos de cada proceso.
+    for v <- processes do
+      send(v, {:vecinos, List.delete(processes,v)})
     end
-    #Aquí va su código, deben de regresar el valor unánime decidido
-    #por todos los procesos.
-    :ok
+
+    Process.sleep(10000)
+
+    # Obtenemos el valor que eligió cada proceso.
+    for pid <- processes do
+      send(pid, {:get_value, self()})
+      receive do
+        value -> IO.puts(inspect(pid)<> " eligió: " <> inspect(value))
+      after
+        100 -> IO.puts(inspect(pid)<> " fallido" )
+      end
+    end
+
   end
 
 end
