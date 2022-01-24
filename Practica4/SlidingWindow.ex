@@ -11,40 +11,82 @@ defmodule SlidingWindow do
   def new(n) do
     package = GeneratePackage.new(n)
     k = :rand.uniform(div(n, 2))
-    #sender = spawn(fn -> sender_loop(package, n, k) end)
-    #recvr = spawn(fn -> recvr_loop(sender) end)
+    sender = spawn(fn -> sender_loop(package, n, k) end)
+    recvr = spawn(fn -> recvr_loop(sender) end)
+
+
+    s = for_receive(sender)
+    IO.inspect(s)
+    r = for_receive(recvr)
+    IO.inspect(r)
+    if r==s do
+      :ok
+    else
+      :nok
+    end    
+
   end
 
+  def for_receive(sender) do
+    send(sender, {:final, self()})
 
+    receive do
+      {:s, container}-> container
+    after
+      3000 -> "Falla en la recepción"
+    end
+  end
 
+  def atom_to_int(att) do
+    String.to_integer(Atom.to_string(att))
+  end
+
+  def int_to_atom(i) do
+    String.to_atom(Integer.to_string(i))
+  end
   
+
   def sender_loop(package, n, k) do
-    axl_sender(package, 0, n ,k)
-  end
+    values=Enum.map(0..n-1, fn x -> {int_to_atom(x+1) , Enum.at(package,x) } end)
+    f_stp=spawn(fn -> recvr_loop(self()) end)
 
-  def axl_sender(package, i, n, k) do
-    if i>=n do
-      package
-    end
-    send(recv_loop, {i, Enum.at(package, i)})
 
+    axl_send(values, n,k, self(),f_stp)
     receive do
-      {w,v} -> if w==i do
-                axl_sender(package,i+1,n,k)
-               end
+      {:r, index, pij} -> axl_send(values, atom_to_int(index)-1, k, self(), pij)
+                
+      {:c, index, pij} -> axl_send(values, atom_to_int(index)+k, k, self(), pij)
+
+      {:final, sender} -> send(sender, {:s, package})
     end
+  end
+
+  def axl_send(values, i, j, pId, pij) do
+    sender=pId
+    recvr=pij
+    max_tras=i-j#cota inferior de la ventana
+    max_ini=i #cota superior de la ventana
+
+    Enum.map(max_tras..max_ini, fn x -> send(recvr,  {int_to_atom(x), values[int_to_atom(x)], j}) end)
 
   end
 
-  def recvr_loop(sender) do
-    out=[]
-    m={:a, 2}
-    receive do
-      {x , y} -> out++[y]
-      send(axl_sender, {x,y})
-      after 
-        5000 -> :timeout 
-    end
-  end
+
+ 
   
+  def recvr_loop(sender) do
+    dict=Map.new()  
+    receive do
+      {:final, sender}-> send(sender, {:s, Enum.map(dict, fn({k,v}) -> v end)})
+
+      {index, value, k} -> if rem(atom_to_int(index), k) == 0 do 
+        Map.put(dict,index , value)
+        send(sender, {:r, index, self()})
+      else
+        Map.put(dict, index , value)
+        send(sender, {:c, index, self()})
+      end
+      end
+    end
+ 
 end
