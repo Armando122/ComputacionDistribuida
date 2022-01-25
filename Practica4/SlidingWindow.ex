@@ -3,7 +3,7 @@ defmodule GeneratePackage do
   def new(n) do
     Enum.map(1..n, fn x -> num = :rand.uniform(2)-1 end)
   end
-  
+
 end
 
 defmodule SlidingWindow do
@@ -14,7 +14,6 @@ defmodule SlidingWindow do
     sender = spawn(fn -> sender_loop(package, n, k) end)
     recvr = spawn(fn -> recvr_loop(sender) end)
 
-
     s = for_receive(sender)
     IO.inspect(s)
     r = for_receive(recvr)
@@ -23,7 +22,7 @@ defmodule SlidingWindow do
       :ok
     else
       :nok
-    end    
+    end
 
   end
 
@@ -44,49 +43,60 @@ defmodule SlidingWindow do
   def int_to_atom(i) do
     String.to_atom(Integer.to_string(i))
   end
-  
+
 
   def sender_loop(package, n, k) do
     values=Enum.map(0..n-1, fn x -> {int_to_atom(x+1) , Enum.at(package,x) } end)
     f_stp=spawn(fn -> recvr_loop(self()) end)
 
+    send(f_stp, :start)
 
     axl_send(values, n,k, self(),f_stp)
     receive do
-      {:r, index, pij} -> axl_send(values, atom_to_int(index)-1, k, self(), pij)
-                
-      {:c, index, pij} -> axl_send(values, atom_to_int(index)+k, k, self(), pij)
-
+      {:ready, pij}-> axl_send(values, n-k, n, self(),pij)#Receiver está preparado para recibir
+      {:c, :"0", pij} -> send(pij, :end)
+      {:c, index, pij} -> axl_send(values, index-k, index-1, self(), pij)
       {:final, sender} -> send(sender, {:s, package})
+    after
+      1000 -> axl_send(values, n-k, n, self(), f_stp)#Reiniciamos el envío
     end
   end
 
   def axl_send(values, i, j, pId, pij) do
     sender=pId
     recvr=pij
-    max_tras=i-j#cota inferior de la ventana
-    max_ini=i #cota superior de la ventana
+    max_tras=i#cota inferior de la ventana
+    max_ini=j #cota superior de la ventana
 
     Enum.map(max_tras..max_ini, fn x -> send(recvr,  {int_to_atom(x), values[int_to_atom(x)], j}) end)
 
   end
 
 
- 
-  
-  def recvr_loop(sender) do
-    dict=Map.new()  
-    receive do
-      {:final, sender}-> send(sender, {:s, Enum.map(dict, fn({k,v}) -> v end)})
 
-      {index, value, k} -> if rem(atom_to_int(index), k) == 0 do 
-        Map.put(dict,index , value)
-        send(sender, {:r, index, self()})
-      else
-        Map.put(dict, index , value)
-        send(sender, {:c, index, self()})
-      end
+
+  def recvr_loop(sender) do
+    saver=spawn(fn->  axl_saver() end)
+    receive do
+      :start-> send(sender, {:ready,self()})
+
+      {:final, sender_2}-> send(saver, {:out, sender_2})
+
+      {index, value, k} -> send(saver, {:external, k, value})
+        send(sender, {:c, index, self()})#Envío del acknoledgement
+
       end
     end
- 
+
+    defp axl_saver  do
+      local=%{}
+      receive do
+      {:own, map} -> {:own, local=Map.merge(local, map)}
+                      |>send(self())
+
+      {:external,k,v } -> send(self(), {:own, Map.put(local, k,v)})
+      {:out, sender}-> send(sender,{:s, Enum.map(local, fn {k, v} -> v end)} )
+      end
+    end
+
 end
